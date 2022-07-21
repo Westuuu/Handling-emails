@@ -4,13 +4,19 @@ import re
 import itertools
 import pandas as pd
 import argparse
+import pathlib
 
 
 def read_files():
     lists_with_emails = []
     logs = []
-    # Couldn't make it to be relative path for easier cooperation, function works but when it's called somewhere else path gets doubled and returns wrong path - needs fixing
-    path = r"C:\Users\W10\Documents\GitHub\Handling emails\emails"
+    # Setting path to folder with emails
+    try:
+        __path__ = pathlib.Path(__file__).parent.resolve()
+    except NameError:
+        __path__ = pathlib.Path('.').resolve()
+    
+    path = __path__ / "emails"
     os.chdir(path)
     
     # Reading emails from .txt files
@@ -37,13 +43,13 @@ def read_files():
     # Looping for number of files in "emails" folder containing data and calling functions depending on the extension of the file
     for file in os.listdir():
         if file.endswith(".txt"):
-            file_path = f"{path}\{file}"
+            file_path = path / file
             lists_with_emails.append(read_text_files(file_path))
         elif file.endswith(".csv"):
-            file_path = f"{path}\{file}"
+            file_path = path / file
             lists_with_emails.append(read_csv_files(file_path))
         elif file.endswith(".logs"):
-            file_path = f"{path}\{file}"
+            file_path = path / file
             logs.append(read_logs(file_path))
 
     
@@ -52,49 +58,55 @@ def read_files():
     emails_from_logs = list(itertools.chain(*logs))
     return emails, emails_from_logs
 
+
 # Excluding duplicates        
 def without_duplicates():
     emails_with_duplicates = read_files()[0]
     emails_without_duplicates = list(set(emails_with_duplicates)) 
     return emails_without_duplicates
 
-# Validating whether an email meets requirements or not             
-def validate_all_emails():
+
+# Validating whether an email is correct or not             
+def validate_emails():
+    # Creating lists to store all emails
     valid_emails = []
     invalid_emails = []
     all_emails = read_files()[0]
+
+    # Creating lists to store unique emails without duplicates
+    unique_emails = without_duplicates()
+    unique_valid_emails = []
+    unique_invalid_emails = []
+
     pat = re.compile(r'([A-Za-z0-9]+[.-_])*[A-Za-z0-9]+@[A-Za-z0-9-]+(\.[A-Z0-9|a-z0-9]{1,4})+')
+
     # Looping over all emails and dividing them into correct and incorrect 
     for email in all_emails:
         if re.fullmatch(pat, email):
             valid_emails.append(email)
         else:
             invalid_emails.append(email)
-    return valid_emails, invalid_emails
 
-def validate_unique_emails():
-    valid_emails = []
-    invalid_emails = []
-    emails = without_duplicates()
-    pat = re.compile(r'([A-Za-z0-9]+[.-_])*[A-Za-z0-9]+@[A-Za-z0-9-]+(\.[A-Z0-9|a-z0-9]{1,4})+')
-    # Looping over all emails and dividing them into correct and incorrect 
-    for email in emails:
+    # Looping over unique emails and dividing them into correct and incorrect
+    for email in unique_emails:
         if re.fullmatch(pat, email):
-            valid_emails.append(email)
+            unique_valid_emails.append(email)
         else:
-            invalid_emails.append(email)
-    return valid_emails, invalid_emails
+            unique_invalid_emails.append(email)
+    return valid_emails, invalid_emails, unique_valid_emails, unique_invalid_emails
 
+
+# This function allows to search emails that contain a certain phrase given by the user
 def search_by():
     search = input("Type a word you would like to search for: ")
-    matches = [match for match in validate_unique_emails()[0] if search in match]
+    matches = [match for match in validate_emails()[2] if search in match]
     print(f"Found emails with '{search}' in email ({len(matches)}):")
     print(*matches, sep='\n')
 
-# Grouping emails by their domain and printing all emails with same domain
+# Grouping emails by their domain and printing all emails with the same domain
 def group_domains():
 
-    ungrouped_emails = validate_unique_emails()[0]
+    ungrouped_emails = validate_emails()[2]
     email_addresses_by_domain = collections.defaultdict(list)
     
     def extract_domain(email_address):
@@ -113,8 +125,9 @@ def group_domains():
         for a in addresses:
             print("      ", a)
 
+# Function checks which emails are not present in logs
 def compare_emails():
-    emails = validate_unique_emails()[0]
+    emails = validate_emails()[2]
     emails_from_logs = read_files()[1]
 
     emails_not_sent = []
@@ -130,8 +143,9 @@ def compare_emails():
 # Commands to run to get answers to tasks untill interface is done:
 # Task number 1:
 def task_1():
-    _, invalid_emails = validate_all_emails()
+    invalid_emails = validate_emails()[1]
     print('Invalid emails (' + str(len(invalid_emails)) + ')', *invalid_emails, sep='\n')
+
 # task_1()
 
 # Task number 2:
@@ -156,24 +170,24 @@ def task_1():
 
 #def ic():
 #    if start == "--incorrect-emails" or start == '-ic':
-#        ic = validate_all_emails()[1]
+#        ic = validate_emails()[1]
 #        print("\n")
 #        for email in ic:
 #            print(email)
 
 
-def Main():
-    #os.chdir()
-    parser = argparse.ArgumentParser(description="Choose your action")
-    parser.add_argument("-ic", "--incorrect-emails", help = "Shows incorrect emails")
+# def Main():
+#     #os.chdir()
+#     parser = argparse.ArgumentParser(description="Choose your action")
+#     parser.add_argument("-ic", "--incorrect-emails", help = "Shows incorrect emails")
 
-    args = parser.parse_args()
+#     args = parser.parse_args()
 
-    if args.incorrect_emails:
-        print(validate_all_emails()[1])
+#     if args.incorrect_emails:
+#         print(validate_emails()[1])
 
-if __name__ == "__main__":
-    Main()
+# if __name__ == "__main__":
+#     Main()
 
 
 
