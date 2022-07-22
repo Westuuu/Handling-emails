@@ -1,6 +1,5 @@
 Author: Adam Mikołajczyk 
 
-## Important
 ## Interface is not ready yet, to run answers to tasks, please use commands at the bottom of the script
 
 As of now script lacks a few things but other than that functions are ready to use.\
