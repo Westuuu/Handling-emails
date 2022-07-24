@@ -10,9 +10,9 @@ Things to add:\
 -readme with examples of how to use the script\
 -function for task number 4 needs to be changed to receive file_path provided by user\
 -Add `argparse` interface\
--Restructure the code
--Add modules/classes or use pipeline method
--Ensure that processing is done only once
--Remove/change comments
--Remove excess code - create in development branch
+-Restructure the code\
+-Add modules/classes or use pipeline method\
+-Ensure that processing is done only once\
+-Remove unnecessary comments\
+-Remove excess code - create in development branch\
 
